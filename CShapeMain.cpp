@@ -4,10 +4,11 @@
 #include "..\stdafx.h"
 #include "..\Win32Project2.h"
 #include "..\Resource.h"
-#include "CShape.h"
+//#include "CShape.h"
 #include "Rect.h"
 #include "Circle.h"
 #include <vector>
+#include <random>
 
 using namespace std;
 
@@ -29,6 +30,13 @@ void DrawCircle(HDC, double, double, double);
 int DrawFlower(HDC, int, int, int, int);
 void DrawStar(HDC, int, int, int);
 POINT crammer(POINT, POINT, POINT, POINT);
+int mkRand(int range)
+{
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_int_distribution<int> dist(1, range);
+	return dist(mt);
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -141,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static int mx, my;
 	//RECT rt = { 0, yPos, 1000, 500 };
 	static RECT rectView;
-	static POINT rectP[4];
+	//static POINT rectP[4];
 	static vector<CShape> vCont;
 
 	switch (message)
@@ -221,20 +229,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			switch (vCont[i].getType())
 			{
 			case 1:
-				rectP[0] = { vCont[i].getPoint()[0] - vCont[i].getRadius(),
+				/*rectP[0] = { vCont[i].getPoint()[0] - vCont[i].getRadius(),
 					vCont[i].getPoint()[1] - vCont[i].getRadius() };
 				rectP[1] = { vCont[i].getPoint()[0] + vCont[i].getRadius(),
 					vCont[i].getPoint()[1] - vCont[i].getRadius() };
 				rectP[2] = { vCont[i].getPoint()[0] + vCont[i].getRadius(),
 					vCont[i].getPoint()[1] + vCont[i].getRadius() };
 				rectP[3] = { vCont[i].getPoint()[0] - vCont[i].getRadius(),
-					vCont[i].getPoint()[1] + vCont[i].getRadius() };
+					vCont[i].getPoint()[1] + vCont[i].getRadius() };*/
 				/*Rectangle(hdc,
 					vCont[i].getPoint()[0] - vCont[i].getRadius(),
 					vCont[i].getPoint()[1] - vCont[i].getRadius(),
 					vCont[i].getPoint()[0] + vCont[i].getRadius(),
 					vCont[i].getPoint()[1] + vCont[i].getRadius());*/
-				Polygon(hdc, rectP, 4);
+				//Polygon(hdc, rectP, 4);
+				vCont[i].show(hdc);
 				break;
 			case 2:
 				Ellipse(hdc,
@@ -254,9 +263,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			mx = LOWORD(lParam);
 			my = HIWORD(lParam);
-			CShape poly;
-			int tmpN = poly.mkRand(3);
-			switch (tmpN)
+			//CShape poly;
+			int tmpN = mkRand(3);
+			/*switch (tmpN)
 			{
 			case 1:
 				poly = Rect(mx, my);
@@ -265,8 +274,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				poly = Circle(mx, my);
 				break;
 			}
-			vCont.push_back(poly);
-			/*if (tmpN == 1)
+			vCont.push_back(poly);*/
+			if (tmpN == 1)
 			{
 				Rect s = Rect(mx, my);
 				vCont.push_back(s);
@@ -275,7 +284,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				Circle s = Circle(mx, my);
 				vCont.push_back(s);
-			}*/
+			}
 			//SetTimer(hWnd, 1, 30, NULL);
 		}
 		InvalidateRgn(hWnd, NULL, TRUE);
