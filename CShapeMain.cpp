@@ -38,6 +38,8 @@ int mkRand(int range)
 	return dist(mt);
 }
 
+//vector<CShape*> vCont;
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPWSTR    lpCmdLine,
@@ -224,7 +226,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//SelectObject(hdc, oldPen);
 		//DeleteObject(hPen);
 		//DeleteObject(hPen2);
-		for (int i=0; i<vCont.size(); i++)
+		for (unsigned int i=0; i<vCont.size(); i++)
 		{
 			switch (vCont[i].getType())
 			{
@@ -246,11 +248,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				vCont[i].show(hdc);
 				break;
 			case 2:
-				Ellipse(hdc,
+				/*Ellipse(hdc,
 					vCont[i].getPoint()[0] - vCont[i].getRadius(),
 					vCont[i].getPoint()[1] - vCont[i].getRadius(),
 					vCont[i].getPoint()[0] + vCont[i].getRadius(),
-					vCont[i].getPoint()[1] + vCont[i].getRadius());
+					vCont[i].getPoint()[1] + vCont[i].getRadius());*/
+				vCont[i].show(hdc);
 				break;
 			}
 			SetTimer(hWnd, 1, 30, NULL);
@@ -263,9 +266,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			mx = LOWORD(lParam);
 			my = HIWORD(lParam);
-			//CShape poly;
-			int tmpN = mkRand(3);
-			/*switch (tmpN)
+			CShape poly;
+			int tmpN = mkRand(1)+1;
+			switch (tmpN)
 			{
 			case 1:
 				poly = Rect(mx, my);
@@ -274,8 +277,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				poly = Circle(mx, my);
 				break;
 			}
-			vCont.push_back(poly);*/
-			if (tmpN == 1)
+			vCont.push_back(poly);
+			/*if (tmpN == 1)
 			{
 				Rect s = Rect(mx, my);
 				vCont.push_back(s);
@@ -284,7 +287,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				Circle s = Circle(mx, my);
 				vCont.push_back(s);
-			}
+			}*/
 			//SetTimer(hWnd, 1, 30, NULL);
 		}
 		InvalidateRgn(hWnd, NULL, TRUE);
@@ -295,7 +298,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case 1:
-			for (int i = 0; i<vCont.size(); i++)
+			for (unsigned int i = 0; i<vCont.size(); i++)
 			{
 				vCont[i].getPoint()[0] +=
 					vCont[i].getSpeed()[0] * vCont[i].getVector()[0];

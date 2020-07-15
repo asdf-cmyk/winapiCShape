@@ -7,11 +7,13 @@ protected:
 public:
 	CShape();
 	//CShape(int, int);
-	virtual ~CShape() = 0;
+	virtual ~CShape() {}
 	int mkRand(int);
-	/*virtual void update() = 0;
-	virtual bool collision() = 0;*/
-	virtual void show(HDC) = 0;
+	/*virtual void update();
+	virtual bool collision();*/
+	virtual void show(HDC hdc) {
+		Rectangle(hdc, 100, 100, 1000, 500);
+	};
 
 	int* getPoint() { return point; }
 	int* getSpeed() { return speed; }

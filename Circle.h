@@ -5,6 +5,6 @@ class Circle: public CShape
 public:
 	Circle(int, int);
 	~Circle();
-	void show(HDC) {}
+	void show(HDC);
 };
 
