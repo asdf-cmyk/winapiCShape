@@ -2,7 +2,7 @@
 #include <random>
 
 CShape::CShape()
-	:radius(50)
+	:radius(40), sizeFactor(1)
 {
 	speed[0] = mkRand(3);
 	speed[1] = mkRand(3);
@@ -17,4 +17,24 @@ int CShape::mkRand(int range)
 	std::uniform_int_distribution<int> dist(1, range);
 
 	return dist(mt);
+}
+
+void CShape::collision(bool isColl)
+{
+	if (point[0] + radius > rectV.right)
+		vec[0] = -1;
+	else if (point[0] - radius < rectV.left)
+		vec[0] = 1;
+
+	if (point[1] + radius > rectV.bottom)
+		vec[1] = -1;
+	else if (point[1] - radius < rectV.top)
+		vec[1] = 1;
+
+	else if (isColl)
+	{
+		vec[0] *= -1;
+		vec[1] *= -1;
+		//colliState = 1;
+	}
 }

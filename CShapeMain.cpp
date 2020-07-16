@@ -7,8 +7,10 @@
 //#include "CShape.h"
 #include "Rect.h"
 #include "Circle.h"
+#include "Star.h"
 #include <vector>
 #include <random>
+#include <memory>
 
 using namespace std;
 
@@ -37,8 +39,6 @@ int mkRand(int range)
 	std::uniform_int_distribution<int> dist(1, range);
 	return dist(mt);
 }
-
-//vector<CShape*> vCont;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -148,18 +148,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;
 	static int count, yPos, x, y, r3;
-	static int mx, my;
+	static int mx, my, frame, gameMode;
 	//RECT rt = { 0, yPos, 1000, 500 };
 	static RECT rectView;
 	//static POINT rectP[4];
-	static vector<CShape> vCont;
+	static vector<CShape*> vCont;
 
 	switch (message)
 	{
 	case WM_CREATE:
 		GetClientRect(hWnd, &rectView);
-		x = (rectView.left + rectView.right) / 2;
-		y = (rectView.top + rectView.bottom) / 2;
+		//x = (rectView.left + rectView.right) / 2;
+		//y = (rectView.top + rectView.bottom) / 2;
+		frame = 0;
 		break;
 	case WM_COMMAND:
 	{
@@ -228,35 +229,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//DeleteObject(hPen2);
 		for (unsigned int i=0; i<vCont.size(); i++)
 		{
-			switch (vCont[i].getType())
-			{
-			case 1:
-				/*rectP[0] = { vCont[i].getPoint()[0] - vCont[i].getRadius(),
-					vCont[i].getPoint()[1] - vCont[i].getRadius() };
-				rectP[1] = { vCont[i].getPoint()[0] + vCont[i].getRadius(),
-					vCont[i].getPoint()[1] - vCont[i].getRadius() };
-				rectP[2] = { vCont[i].getPoint()[0] + vCont[i].getRadius(),
-					vCont[i].getPoint()[1] + vCont[i].getRadius() };
-				rectP[3] = { vCont[i].getPoint()[0] - vCont[i].getRadius(),
-					vCont[i].getPoint()[1] + vCont[i].getRadius() };*/
-				/*Rectangle(hdc,
-					vCont[i].getPoint()[0] - vCont[i].getRadius(),
-					vCont[i].getPoint()[1] - vCont[i].getRadius(),
-					vCont[i].getPoint()[0] + vCont[i].getRadius(),
-					vCont[i].getPoint()[1] + vCont[i].getRadius());*/
-				//Polygon(hdc, rectP, 4);
-				vCont[i].show(hdc);
-				break;
-			case 2:
-				/*Ellipse(hdc,
-					vCont[i].getPoint()[0] - vCont[i].getRadius(),
-					vCont[i].getPoint()[1] - vCont[i].getRadius(),
-					vCont[i].getPoint()[0] + vCont[i].getRadius(),
-					vCont[i].getPoint()[1] + vCont[i].getRadius());*/
-				vCont[i].show(hdc);
-				break;
-			}
+			//switch (vCont[i]->getType())
+			//{
+			//case 1:
+			//	vCont[i]->show(hdc);
+			//	break;
+			//case 2:
+			//	/*Ellipse(hdc,
+			//		vCont[i].getPoint()[0] - vCont[i].getRadius(),
+			//		vCont[i].getPoint()[1] - vCont[i].getRadius(),
+			//		vCont[i].getPoint()[0] + vCont[i].getRadius(),
+			//		vCont[i].getPoint()[1] + vCont[i].getRadius());*/
+			//	vCont[i]->show(hdc);
+			//	break;
+			//}
 			SetTimer(hWnd, 1, 30, NULL);
+			vCont[i]->show(hdc);
+			//SetTimer(hWnd, 1, 30, NULL);
 		} // for end
 		EndPaint(hWnd, &ps);
 	}
@@ -266,75 +255,218 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			mx = LOWORD(lParam);
 			my = HIWORD(lParam);
-			CShape poly;
-			int tmpN = mkRand(1)+1;
+			bool clickFlag = 0;
+			for (unsigned int i = 0; i < vCont.size(); i++)
+				if (hypot(mx - vCont[i]->getPoint()[0],
+					my - vCont[i]->getPoint()[1]) <= 2*vCont[i]->getRadius())
+				{
+					clickFlag = 1;
+					break;
+				}
+			if (clickFlag) break;
+
+			//CShape poly;
+			int tmpN = mkRand(2);
 			switch (tmpN)
 			{
 			case 1:
-				poly = Rect(mx, my);
+				//poly = Rect(mx, my);
+				vCont.push_back(new Rect(mx, my, 1, rectView));
+
+				//unique_ptr<CShape> tmp(new Rect(mx, my));
+				//vCont.push_back(tmp);
 				break;
 			case 2:
-				poly = Circle(mx, my);
+				//poly = Circle(mx, my);
+				vCont.push_back(new Circle(mx, my, rectView));
+				break;
+			case 3:
+				vCont.push_back(new Star(mx, my, rectView));
 				break;
 			}
-			vCont.push_back(poly);
-			/*if (tmpN == 1)
-			{
-				Rect s = Rect(mx, my);
-				vCont.push_back(s);
-			}
-			else if (tmpN == 2)
-			{
-				Circle s = Circle(mx, my);
-				vCont.push_back(s);
-			}*/
-			//SetTimer(hWnd, 1, 30, NULL);
 		}
 		InvalidateRgn(hWnd, NULL, TRUE);
 	}
 	break;
 	case WM_TIMER:
 	{
+		unsigned int tmpI;
+		bool colliFlag_mode3 = 0;
 		switch (wParam)
 		{
 		case 1:
-			for (unsigned int i = 0; i<vCont.size(); i++)
+			frame = (frame+3) % 360;
+			for (unsigned int i = 0; i < vCont.size(); i++)
 			{
-				vCont[i].getPoint()[0] +=
-					vCont[i].getSpeed()[0] * vCont[i].getVector()[0];
-				if(vCont[i].getPoint()[0]+vCont[i].getRadius() > rectView.right ||
-					vCont[i].getPoint()[0]-vCont[i].getRadius() < rectView.left)
-					vCont[i].getVector()[0] *= -1;
-				
-				vCont[i].getPoint()[1] +=
-					vCont[i].getSpeed()[1] * vCont[i].getVector()[1];
-				if (vCont[i].getPoint()[1]+vCont[i].getRadius() > rectView.bottom ||
-					vCont[i].getPoint()[1]-vCont[i].getRadius() < rectView.top)
-					vCont[i].getVector()[1] *= -1;
-			} // for end
+				bool colliFlag = 0, colliFlag_mode3Flag = 0;
+				int colliFlag_mode2 = 0, objI = 0, objJ = 0/*, colliFlag_mode3 = 0*/;
+				unsigned int j;
+				vCont[i]->update(frame);
+
+				colliFlag_mode3 = 0;
+				for (j = 0; j < vCont.size(); j++)
+				{
+					if (i == j) continue;
+					else if (hypot(vCont[i]->getPoint()[0] - vCont[j]->getPoint()[0],
+						vCont[i]->getPoint()[1] - vCont[j]->getPoint()[1]) <=
+						vCont[i]->getRadius() + vCont[j]->getRadius())
+					{
+						colliFlag = 1;
+
+						//switch (gameMode)
+						//{
+						//case 2:
+						if (gameMode > 1)
+						{
+							if (vCont[i]->getType() == 1)
+							{
+								if (vCont[j]->getType() == 2)
+								{
+									/*vCont[j]->setSizeFactor(vCont[j]->getSizeFactor() + 1);
+									delete vCont[i];
+									vector<CShape*>::iterator it = vCont.erase(vCont.begin() + i);*/
+
+									colliFlag_mode2 = 1;
+									colliFlag_mode3 = 1;
+									tmpI = i;
+								}
+								else if (vCont[j]->getType() == 3)
+								{
+									colliFlag_mode2 = 2;
+								}
+							}
+							else if (vCont[i]->getType() == 2)
+							{
+								if (vCont[i]->getType() == 1)
+								{
+									colliFlag_mode2 = 2;
+								}
+								else if (vCont[j]->getType() == 3)
+								{
+									colliFlag_mode2 = 1;
+									colliFlag_mode3 = 2;
+								}
+							}
+							else if (vCont[i]->getType() == 3)
+							{
+								if (vCont[i]->getType() == 1)
+								{
+									colliFlag_mode2 = 1;
+									colliFlag_mode3 = 3;
+								}
+								else if (vCont[j]->getType() == 2)
+								{
+									colliFlag_mode2 = 2;
+								}
+							}
+							objI = i;
+							objJ = j;
+						}
+					//		break;
+					//	case 3:
+					//		break;
+					//	}
+
+						break;
+					}
+				} // for j end
+
+				vCont[i]->collision(colliFlag);
+				double factor;
+				switch (gameMode)
+				{
+				case 2:
+					switch (colliFlag_mode2)
+					{
+					case 1:
+						factor = vCont[i]->getRadius() / 40;
+						vCont[j]->setSizeFactor(vCont[j]->getSizeFactor() + factor /*(vCont[objJ]->getRadius)/40*/);
+						delete vCont[i];
+						vCont.erase(vCont.begin() + i);
+						break;
+					case 2:
+						factor = vCont[j]->getRadius() / 40;
+						vCont[i]->setSizeFactor(vCont[i]->getSizeFactor() + factor/*(vCont[objI]->getRadius) / 40*/);
+						delete vCont[j];
+						vCont.erase(vCont.begin() + j);
+						break;
+					}
+					break;
+				case 3:
+					switch (colliFlag_mode3)
+					{
+					case 1:
+						vCont.insert(vCont.begin(), new Rect(
+							vCont[i]->getPoint()[0]+vCont[i]->getRadius()/2,
+							vCont[i]->getPoint()[1]-vCont[i]->getRadius()/2,
+							vCont[i]->getRadius()/80, rectView));
+						vCont.insert(vCont.begin(), new Rect(
+							vCont[i]->getPoint()[0] - vCont[i]->getRadius()/2,
+							vCont[i]->getPoint()[1] + vCont[i]->getRadius()/2,
+							vCont[i]->getRadius()/80, rectView));
+						i += 2;
+						//delete vCont[i];
+						vCont.erase(vCont.begin() + i);
+						colliFlag_mode3 = 0;
+						break;
+					case 2:
+						break;
+					}
+					colliFlag_mode3Flag = 1;
+					break;
+				} // switch gameMode end
+				//if (colliFlag_mode3Flag) break;
+			} // for i end
+
+			/*switch (gameMode)
+			{
+			case 3:
+				switch (colliFlag_mode3)
+				{
+				case 1:
+					vCont.push_back(new Rect(
+						vCont[tmpI]->getPoint()[0] + vCont[tmpI]->getRadius() / 2,
+						vCont[tmpI]->getPoint()[1] - vCont[tmpI]->getRadius() / 2,
+						vCont[tmpI]->getRadius() / 80, rectView));
+					vCont.push_back(new Rect(
+						vCont[tmpI]->getPoint()[0] - vCont[tmpI]->getRadius() / 2,
+						vCont[tmpI]->getPoint()[1] + vCont[tmpI]->getRadius() / 2,
+						vCont[tmpI]->getRadius() / 80, rectView));
+					delete vCont[tmpI];
+					vCont.erase(vCont.begin() + tmpI);
+					break;
+				case 2:
+					break;
+				}
+				break;
+			}*/
+
+			for (unsigned int i = 0; i < vCont.size(); i++)
+			{
+				if (vCont[i]->getRadius() > 40 * 5 || vCont[i]->getRadius() <= 10)
+				{
+					delete vCont[i];
+					vCont.erase(vCont.begin() + i);
+				}
+			}
+
 			break;
-		}
+		} // wm_Param switch end
 	}
 	InvalidateRgn(hWnd, NULL, TRUE);
 	break;
 	case WM_KEYDOWN:
 	{
-		int pos = 30;
 		switch (wParam)
 		{
-		case VK_LEFT:
-			SetTimer(hWnd, 1, 70, NULL);
+		case 0x31:
+			gameMode = 1;
 			break;
-		case VK_UP:
-			SetTimer(hWnd, 2, 200, NULL);
+		case 0x32:
+			gameMode = 2;
 			break;
-		case VK_RIGHT:
-			x += pos;
-			if (x + (pos + r3) > rectView.right) x -= pos;
-			break;
-		case VK_DOWN:
-			y += pos;
-			if (y + (pos + r3) > rectView.bottom) y -= pos;
+		case 0x33:
+			gameMode = 3;
 			break;
 		}
 		InvalidateRgn(hWnd, NULL, TRUE);
